@@ -6,6 +6,9 @@ const fss = require('node:fs');
 const path = require('node:path');
 const { readConfig, shouldStartWithApiKey } = require('./lib/config');
 const { createRouter } = require('./lib/router');
+const tagsHelpers = require('./lib/tags');
+const searchHelpers = require('./lib/search');
+const vaultHelpers = require('./lib/vault');
 
 const DEFAULT_FIELD_DEFINITIONS = 'fields: []\n';
 const MAX_BODY_BYTES = 50 * 1024 * 1024;
@@ -90,15 +93,23 @@ async function handleAuthenticatedRoute(config, url, req, res) {
         }
 
         if (url.pathname === '/tags/' || url.pathname === '/tags') {
-            await handleTags(config, res);
+            if (req.method !== 'GET') {
+                sendJson(res, 405, { error: 'Method not allowed' });
+                return;
+            }
+            await tagsHelpers.handleTags(config, res, { sendJson });
             return;
         }
         if (url.pathname === '/search/simple/' || url.pathname === '/search/simple' || url.pathname === '/search/' || url.pathname === '/search') {
-            await handleSearch(config, req, res, url);
+            if (req.method !== 'POST') {
+                sendJson(res, 405, { error: 'Method not allowed' });
+                return;
+            }
+            await searchHelpers.handleSearch(config, req, res, url, { sendJson });
             return;
         }
         if (url.pathname === '/vault' || url.pathname === '/vault/' || url.pathname.startsWith('/vault/')) {
-            await handleVault(config, req, res, url);
+            await vaultHelpers.handleVault(config, req, res, url, { sendText, sendJson, sendEmpty, defaultFieldDefinitions: DEFAULT_FIELD_DEFINITIONS });
             return;
         }
 
@@ -434,10 +445,14 @@ module.exports = {
         createRequestHandler,
         startCompatibilityServer,
         DEFAULT_FIELD_DEFINITIONS,
-        collectTagsFromText,
-        resolveVaultPath,
+        collectTagsFromText: tagsHelpers.collectTagsFromText,
+        resolveVaultPath: vaultHelpers.resolveVaultPath,
     },
 };
+
+
+
+
 
 
 
