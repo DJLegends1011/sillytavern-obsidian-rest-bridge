@@ -5,6 +5,7 @@ const fs = require('node:fs/promises');
 const fss = require('node:fs');
 const path = require('node:path');
 const { readConfig, shouldStartWithApiKey } = require('./lib/config');
+const { createRouter } = require('./lib/router');
 
 const DEFAULT_FIELD_DEFINITIONS = 'fields: []\n';
 const MAX_BODY_BYTES = 50 * 1024 * 1024;
@@ -74,67 +75,43 @@ function createRequestHandler(config) {
         vault: path.resolve(config.vault),
     };
 
-    return async function handle(req, res) {
-        setCorsHeaders(res);
-        if (req.method === 'OPTIONS') {
-            sendEmpty(res, 204);
+    return createRouter({
+        handleRoot: (_req, res) => handleRoot(normalizedConfig, res),
+        handleHealth: (_req, res) => handleHealth(normalizedConfig, res),
+        requireAuth: (req) => requireAuth(req, normalizedConfig),
+        handleAuthenticated: (url, req, res) => handleAuthenticatedRoute(normalizedConfig, url, req, res),
+    });
+}
+
+async function handleAuthenticatedRoute(config, url, req, res) {
+    try {
+        if (config.debug) {
+            console.log('[mobile-obsidian-rest]', req.method, url.pathname);
+        }
+
+        if (url.pathname === '/tags/' || url.pathname === '/tags') {
+            await handleTags(config, res);
+            return;
+        }
+        if (url.pathname === '/search/simple/' || url.pathname === '/search/simple' || url.pathname === '/search/' || url.pathname === '/search') {
+            await handleSearch(config, req, res, url);
+            return;
+        }
+        if (url.pathname === '/vault' || url.pathname === '/vault/' || url.pathname.startsWith('/vault/')) {
+            await handleVault(config, req, res, url);
             return;
         }
 
-        try {
-            const url = new URL(req.url || '/', 'http://127.0.0.1');
-            if (normalizedConfig.debug) {
-                console.log('[mobile-obsidian-rest]', req.method, url.pathname);
-            }
-
-            if (req.method === 'GET' && url.pathname === '/') {
-                await handleRoot(normalizedConfig, res);
-                return;
-            }
-            if (req.method === 'GET' && url.pathname === '/healthz') {
-                await handleHealth(normalizedConfig, res);
-                return;
-            }
-
-            requireAuth(req, normalizedConfig);
-
-            if (url.pathname === '/tags/' || url.pathname === '/tags') {
-                await handleTags(normalizedConfig, res);
-                return;
-            }
-            if (url.pathname === '/search/simple/' || url.pathname === '/search/simple' || url.pathname === '/search/' || url.pathname === '/search') {
-                await handleSearch(normalizedConfig, req, res, url);
-                return;
-            }
-            if (url.pathname === '/commands/' || url.pathname === '/commands') {
-                sendJson(res, 200, []);
-                return;
-            }
-            if (url.pathname.startsWith('/commands/')) {
-                sendJson(res, 501, {
-                    ok: false,
-                    error: 'Command execution is not available in the mobile bridge.',
-                    command: decodeURIComponent(url.pathname.slice('/commands/'.length).replace(/\/$/, '')),
-                });
-                return;
-            }
-            if (url.pathname === '/vault' || url.pathname === '/vault/' || url.pathname.startsWith('/vault/')) {
-                await handleVault(normalizedConfig, req, res, url);
-                return;
-            }
-
-            sendJson(res, 404, { error: 'Not found' });
-        } catch (err) {
-            if (err?.statusCode) {
-                sendJson(res, err.statusCode, { error: err.message });
-                return;
-            }
-            console.warn('[mobile-obsidian-rest] request failed:', err?.message || err);
-            sendJson(res, 500, { error: 'Internal server error' });
+        sendJson(res, 404, { error: 'Not found' });
+    } catch (err) {
+        if (err?.statusCode) {
+            sendJson(res, err.statusCode, { error: err.message });
+            return;
         }
-    };
+        console.warn('[mobile-obsidian-rest] request failed:', err?.message || err);
+        sendJson(res, 500, { error: 'Internal server error' });
+    }
 }
-
 async function handleRoot(config, res) {
     sendJson(res, 200, {
         status: 'ok',
@@ -461,4 +438,7 @@ module.exports = {
         resolveVaultPath,
     },
 };
+
+
+
 
