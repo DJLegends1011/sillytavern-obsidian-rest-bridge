@@ -27,3 +27,14 @@ Legacy aliases remain supported for migration from the embedded DLE bridge:
 - `OBSIDIAN_API_FALLBACK_FIELDS`
 - `OBSIDIAN_API_HIDE_ROOT_DOTFILES`
 - `OBSIDIAN_API_DEBUG`
+
+## Known Consumers
+
+- DeepLore Enhanced
+
+## Migration From The Embedded DLE Bridge
+
+1. Clone this standalone repo into SillyTavern's `plugins/` folder.
+2. Keep the same vault path and API key you already used with the embedded bridge.
+3. Switch to the canonical `OBSIDIAN_REST_BRIDGE_*` env names when convenient; legacy aliases remain supported.
+4. Point DLE at `127.0.0.1` and the configured bridge port.
