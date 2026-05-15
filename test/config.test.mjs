@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readConfig, shouldStartWithApiKey } from '../lib/config.js';
+import { getLegacyApiKeyLogMethod, readConfig, shouldStartWithApiKey } from '../lib/config.js';
 
 test('readConfig prefers canonical standalone env names', () => {
     const config = readConfig({
@@ -42,4 +42,16 @@ test('shouldStartWithApiKey requires a non-empty string', () => {
     assert.equal(shouldStartWithApiKey('token'), true);
     assert.equal(shouldStartWithApiKey(''), false);
     assert.equal(shouldStartWithApiKey(null), false);
+});
+
+test('legacy default api key is informational on loopback hosts', () => {
+    assert.equal(getLegacyApiKeyLogMethod({ apiKey: '12345', host: '127.0.0.1' }), 'log');
+    assert.equal(getLegacyApiKeyLogMethod({ apiKey: '12345', host: 'localhost' }), 'log');
+    assert.equal(getLegacyApiKeyLogMethod({ apiKey: '12345', host: '::1' }), 'log');
+});
+
+test('legacy default api key stays a warning on non-loopback hosts', () => {
+    assert.equal(getLegacyApiKeyLogMethod({ apiKey: '12345', host: '0.0.0.0' }), 'warn');
+    assert.equal(getLegacyApiKeyLogMethod({ apiKey: '12345', host: '192.168.1.20' }), 'warn');
+    assert.equal(getLegacyApiKeyLogMethod({ apiKey: 'not-default', host: '127.0.0.1' }), null);
 });

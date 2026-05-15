@@ -4,7 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const fss = require('node:fs');
 const path = require('node:path');
-const { readConfig, shouldStartWithApiKey } = require('./lib/config');
+const { getLegacyApiKeyLogMethod, readConfig, shouldStartWithApiKey } = require('./lib/config');
 const { createRouter } = require('./lib/router');
 const tagsHelpers = require('./lib/tags');
 const searchHelpers = require('./lib/search');
@@ -43,8 +43,9 @@ async function init(router) {
         console.warn('[mobile-obsidian-rest] OBSIDIAN_API_KEY is not set; bridge server not started.');
         return;
     }
-    if (activeConfig.apiKey === '12345') {
-        console.warn('[mobile-obsidian-rest] OBSIDIAN_API_KEY is using the legacy default value "12345". This is acceptable for loopback testing, but use a stronger key before binding to LAN.');
+    const legacyApiKeyLogMethod = getLegacyApiKeyLogMethod(activeConfig);
+    if (legacyApiKeyLogMethod) {
+        console[legacyApiKeyLogMethod]('[mobile-obsidian-rest] OBSIDIAN_API_KEY is using the legacy default value "12345". This is acceptable for loopback testing, but use a stronger key before binding to LAN.');
     }
 
     server = await startCompatibilityServer(activeConfig);
