@@ -79,7 +79,7 @@ function createRequestHandler(config) {
     };
 
     return createRouter({
-        handleRoot: (_req, res) => handleRoot(normalizedConfig, res),
+        handleRoot: (req, res) => handleRoot(normalizedConfig, req, res),
         handleHealth: (_req, res) => handleHealth(normalizedConfig, res),
         requireAuth: (req) => requireAuth(req, normalizedConfig),
         handleAuthenticated: (url, req, res) => handleAuthenticatedRoute(normalizedConfig, url, req, res),
@@ -123,11 +123,11 @@ async function handleAuthenticatedRoute(config, url, req, res) {
         sendJson(res, 500, { error: 'Internal server error' });
     }
 }
-async function handleRoot(config, res) {
+async function handleRoot(config, req, res) {
     sendJson(res, 200, {
         status: 'ok',
         service: 'obsidian-local-rest-api-mobile-bridge',
-        authenticated: false,
+        authenticated: req.headers.authorization === `Bearer ${config.apiKey}`,
         vault: path.basename(config.vault),
         compat: {
             fallbackFields: config.fallbackFields,
