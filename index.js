@@ -4,9 +4,8 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const fss = require('node:fs');
 const path = require('node:path');
+const { readConfig, shouldStartWithApiKey } = require('./lib/config');
 
-const DEFAULT_PORT = 27123;
-const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_FIELD_DEFINITIONS = 'fields: []\n';
 const MAX_BODY_BYTES = 50 * 1024 * 1024;
 
@@ -18,22 +17,6 @@ const info = {
     name: 'SillyTavern Obsidian REST Bridge',
     description: 'Exposes a Local REST API-compatible vault server for Termux/SillyTavern users.',
 };
-
-function readConfig(env = process.env) {
-    const vault = env.OBSIDIAN_VAULT || env.DLE_MOBILE_OBSIDIAN_VAULT || '';
-    const apiKey = env.OBSIDIAN_API_KEY || env.DLE_MOBILE_OBSIDIAN_API_KEY || '';
-    const host = env.OBSIDIAN_API_HOST || env.DLE_MOBILE_OBSIDIAN_API_HOST || DEFAULT_HOST;
-    const port = Number(env.OBSIDIAN_API_PORT || env.DLE_MOBILE_OBSIDIAN_API_PORT || DEFAULT_PORT);
-    const fallbackFields = env.OBSIDIAN_API_FALLBACK_FIELDS !== '0';
-    const hideRootDotfiles = env.OBSIDIAN_API_HIDE_ROOT_DOTFILES !== '0';
-    const debug = env.OBSIDIAN_API_DEBUG === '1' || env.DLE_MOBILE_OBSIDIAN_DEBUG === '1';
-
-    return { vault, apiKey, host, port, fallbackFields, hideRootDotfiles, debug };
-}
-
-function shouldStartWithApiKey(apiKey) {
-    return typeof apiKey === 'string' && apiKey.length > 0;
-}
 
 async function init(router) {
     activeConfig = readConfig();
@@ -478,3 +461,4 @@ module.exports = {
         resolveVaultPath,
     },
 };
+
