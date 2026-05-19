@@ -4,7 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const fss = require('node:fs');
 const path = require('node:path');
-const { getLegacyApiKeyLogMethod, readConfig, shouldStartWithApiKey } = require('./lib/config');
+const { getLegacyApiKeyLogMethod, loadConfigFile, readConfig, shouldStartWithApiKey } = require('./lib/config');
 const { createRouter } = require('./lib/router');
 const tagsHelpers = require('./lib/tags');
 const searchHelpers = require('./lib/search');
@@ -23,7 +23,7 @@ const info = {
 };
 
 async function init(router) {
-    activeConfig = readConfig();
+    activeConfig = readConfig(process.env, loadConfigFile());
 
     router.get('/status', (_req, res) => {
         res.json({

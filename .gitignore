@@ -1,3 +1,6 @@
+# Local, device-specific config (holds vault path + API key)
+config.json
+
 # Ignore editor and runtime noise
 node_modules/
 npm-debug.log*

@@ -8,7 +8,26 @@ Standalone extraction based on the proven DeepLore mobile bridge.
 
 ## Configuration
 
-Canonical environment variables:
+### Config file (recommended for Termux)
+
+Environment variables exported in a shell do **not** survive a phone reboot,
+so the bridge can silently fail to start after a restart. To make settings
+persistent, copy the example file into the plugin folder and fill it in:
+
+```sh
+cp config.example.json config.json
+```
+
+Then edit `config.json` and set at least `vault` (absolute path to your
+Obsidian vault) and `apiKey`. The file is JSON (not YAML) and lives next to
+the plugin's `index.js`; it is git-ignored so your path and key are not
+committed.
+
+Precedence per setting: **environment variable → `config.json` → built-in
+default.** Environment variables still win when set, so existing setups keep
+working unchanged.
+
+### Canonical environment variables
 
 - `OBSIDIAN_REST_BRIDGE_VAULT`
 - `OBSIDIAN_REST_BRIDGE_API_KEY`
