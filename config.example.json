@@ -1,0 +1,9 @@
+{
+  "vault": "/data/data/com.termux/files/home/path/to/your/ObsidianVault",
+  "apiKey": "change-me-to-a-strong-secret",
+  "host": "127.0.0.1",
+  "port": 27123,
+  "fallbackFields": true,
+  "hideRootDotfiles": true,
+  "debug": false
+}
